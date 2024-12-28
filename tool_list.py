@@ -18,7 +18,6 @@ from langchain_community.tools.tavily_search import TavilySearchResults
 import base64
 import httpx
 
-
 load_dotenv()
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 TAVILY_API_KEY = os.getenv('TAVILY_API_KEY')
@@ -37,10 +36,10 @@ def get_current_weather(city_name):
     if not WEATHER_API_KEY:
         raise ValueError("WEATHER_API_KEY environment variable is not set.")
     
-    # Construct the API URL
+    # API URL
     url = f"https://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={WEATHER_API_KEY}&units=metric"
     
-    # Make the API request
+    # API request
     response = requests.get(url)
     
     # Raise an exception if the request fails

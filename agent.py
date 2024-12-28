@@ -1,3 +1,6 @@
+#changed:
+# in input_data dictionary, new input is location.
+
 import tool_list
 import os
 from dotenv import load_dotenv
@@ -8,13 +11,14 @@ from langchain_cohere.react_multi_hop.agent import create_cohere_react_agent
 
 load_dotenv()
 COHERE_API_KEY = os.getenv('COHERE_API_KEY')
-LANGCHAIN_API_KEY = os.getenv('LANGCHAIN_API_KEY')
-LANGCHAIN_TRACING_V2 = "true"
+os.environ["LANGCHAIN_API_KEY"] = os.getenv('LANGCHAIN_API_KEY')
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_PROJECT"] = "FoodAI_tracing"
 LANGCHAIN_ENDPOINT = "https://api.smith.langchain.com"
 
 tools_list = tool_list.TOOLS
 
-with open('vision_prompt.txt', 'r') as file:
+with open('chat_prompt.txt', 'r') as file:
     preamble = file.read()
 
 prompt = ChatPromptTemplate.from_messages(
@@ -32,19 +36,34 @@ agent = create_cohere_react_agent(llm, tools_list, prompt)
 agent_executor = AgentExecutor(agent=agent, tools=tools_list, verbose=True)
 
 
-input_data = {
-    'datetime':'',
+# input_data = {           #old
+#     'datetime':'',
+#     'input':'',
+#     'image':'',
+# }
+
+input_data = {              #new
     'input':'',
     'image':'',
+    'location':'',
 }
 
 import datetime
 def direct_chat(user_input):
     global input_data
+    # input_data = {
+    #     'datetime':str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+    #     'input':user_input.input,
+    #     'image':user_input.image,
+    # }
+    weather_api_res = tool_list.get_current_weather(user_input.location)
     input_data = {
         'datetime':str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
         'input':user_input.input,
         'image':user_input.image,
+        'location':user_input.location,
+        'temperature':f"{weather_api_res['main']['temp']}°C",
+        'humidity':f"{weather_api_res['main']['humidity']}%"
     }
     response = agent_executor.invoke({"input": input_data, "preamble": preamble})['output']
     return response
