@@ -4,7 +4,7 @@
 import json
 from fastapi import FastAPI
 from pydantic import BaseModel
-from agent import direct_chat, direct_image
+from agent import ai_ImgAnalyser ,ai_InventoryManeger ,direct_image
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -17,10 +17,12 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-#datetime: str
-class input_data_chat(BaseModel):
-    input: str|None
+class input_data_ai_ImgAnalyser(BaseModel):
     image: str|None
+    location: str|None
+
+class input_data_ai_InventoryManeger(BaseModel):
+    input: str|None
     location: str|None
 
 class input_data_vision(BaseModel):
@@ -32,9 +34,9 @@ async def confirmation():
     return {"message":"API working!"}
 
 
-@app.post("/direct_chat")
-async def model1(input: input_data_chat):
-    response = direct_chat(input)
+@app.post("/ai_ImgAnalyser")
+async def model1(input: input_data_ai_ImgAnalyser):
+    response = ai_ImgAnalyser(input)
     try:
         # Extract the JSON portion from the response string
         start_idx = response.find('{')
@@ -84,3 +86,8 @@ async def model2(input: input_data_vision):
     except json.JSONDecodeError as e:
         raise ValueError(f"Error parsing JSON: {e}")
     # return {"response": response}
+
+@app.post("/ai_InventoryManeger")
+async def model3(input: input_data_ai_InventoryManeger):
+    response = ai_InventoryManeger(input)
+    return {"response": response}

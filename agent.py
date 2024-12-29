@@ -18,9 +18,6 @@ LANGCHAIN_ENDPOINT = "https://api.smith.langchain.com"
 
 tools_list = tool_list.TOOLS
 
-with open('chat_prompt.txt', 'r') as file:
-    preamble = file.read()
-
 prompt = ChatPromptTemplate.from_messages(
     [
         ("system", "{preamble}",),
@@ -43,23 +40,19 @@ agent_executor = AgentExecutor(agent=agent, tools=tools_list, verbose=True)
 # }
 
 input_data = {              #new
-    'input':'',
     'image':'',
     'location':'',
 }
 
+with open('AgentImg_prompt.txt', 'r') as file:
+    preamble = file.read()
+
 import datetime
-def direct_chat(user_input):
+def ai_ImgAnalyser(user_input):
     global input_data
-    # input_data = {
-    #     'datetime':str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-    #     'input':user_input.input,
-    #     'image':user_input.image,
-    # }
     weather_api_res = tool_list.get_current_weather(user_input.location)
     input_data = {
         'datetime':str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-        'input':user_input.input,
         'image':user_input.image,
         'location':user_input.location,
         'temperature':f"{weather_api_res['main']['temp']}°C",
@@ -67,6 +60,20 @@ def direct_chat(user_input):
     }
     response = agent_executor.invoke({"input": input_data, "preamble": preamble})['output']
     return response
+
+with open('AgentChat_prompt.txt', 'r') as file:
+    preambleC = file.read()
+
+def ai_InventoryManeger(user_input):
+    global input_data
+    input_data = {
+        'datetime':str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+        'input':user_input.input,
+        'location': user_input.location,
+    }
+    response = agent_executor.invoke({"input": input_data, "preamble": preambleC})['output']
+    return response
+
 
 with open('vision_prompt.txt', 'r') as file:
     preambleV = file.read()
