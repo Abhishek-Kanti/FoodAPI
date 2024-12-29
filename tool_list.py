@@ -19,20 +19,32 @@ import httpx
 import firebase_admin
 from firebase_admin import credentials, db
 
-DATA={
-        "type": os.getenv('type'),
-        "project_id": os.getenv("project_id"),
-        "private_key_id": os.getenv("private_key_id"),
-        "private_key": os.getenv("private_key"),
-        "client_email": os.getenv("client_email"),
-        "auth_uri": os.getenv("auth_uri"),
-        "client_id": os.getenv("client_id"),
-        "token_uri": os.getenv("token_uri"),
-        "auth_provider_x509_cert_url": os.getenv("auth_provider_x509_cert_url"),
-        "client_x509_cert_url": os.getenv("client_x509_cert_url"),
-        "universe_domain": os.getenv("universe_domain")
-    }
+os.environ["type"]= os.getenv('type')
+os.environ["project_id"]= os.getenv("project_id")
+os.environ["private_key_id"]= os.getenv("private_key_id")
+os.environ["private_key"]= os.getenv("private_key")
+os.environ["client_email"]= os.getenv("client_email")
+os.environ["auth_uri"]= os.getenv("auth_uri")
+os.environ["client_id"]= os.getenv("client_id")
+os.environ["token_uri"]= os.getenv("token_uri")
+os.environ["auth_provider_x509_cert_url"]= os.getenv("auth_provider_x509_cert_url")
+os.environ["client_x509_cert_url"]= os.getenv("client_x509_cert_url")
+os.environ["universe_domain"]= os.getenv("universe_domain")
 
+DATA={
+        "type": os.environ.get('type'),
+        "project_id": os.environ.get("project_id"),
+        "private_key_id": os.environ.get("private_key_id"),
+        "private_key": os.environ.get("private_key"),
+        "client_email": os.environ.get("client_email"),
+        "auth_uri": os.environ.get("auth_uri"),
+        "client_id": os.environ.get("client_id"),
+        "token_uri": os.environ.get("token_uri"),
+        "auth_provider_x509_cert_url": os.environ.get("auth_provider_x509_cert_url"),
+        "client_x509_cert_url": os.environ.get("client_x509_cert_url"),
+        "universe_domain": os.environ.get("universe_domain")
+}
+    
 cred = credentials.Certificate(DATA)
 firebase_admin.initialize_app(cred, {'databaseURL': 'https://foodai-7ebf0-default-rtdb.firebaseio.com/'})
 
