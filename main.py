@@ -1,11 +1,15 @@
 #changed:
 # in input_data_chat class, 'input' and 'image' input types now can be none and new key val pair of 'location' is added.
 
+import os
 import json
 from fastapi import FastAPI
 from pydantic import BaseModel
 from agent import ai_ImgAnalyser ,ai_InventoryManeger ,direct_image
 from fastapi.middleware.cors import CORSMiddleware
+import firebase_admin
+from firebase_admin import credentials
+from dotenv import load_dotenv
 
 app = FastAPI()
 

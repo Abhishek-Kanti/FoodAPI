@@ -1,9 +1,7 @@
 import os
-import json
 import requests
 from datetime import datetime
 
-from PIL import Image
 from dotenv import load_dotenv
 
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -17,6 +15,26 @@ from langchain_community.tools.tavily_search import TavilySearchResults
 
 import base64
 import httpx
+
+import firebase_admin
+from firebase_admin import credentials, db
+
+DATA={
+        "type": os.getenv('type'),
+        "project_id": os.getenv("project_id"),
+        "private_key_id": os.getenv("private_key_id"),
+        "private_key": os.getenv("private_key"),
+        "client_email": os.getenv("client_email"),
+        "auth_uri": os.getenv("auth_uri"),
+        "client_id": os.getenv("client_id"),
+        "token_uri": os.getenv("token_uri"),
+        "auth_provider_x509_cert_url": os.getenv("auth_provider_x509_cert_url"),
+        "client_x509_cert_url": os.getenv("client_x509_cert_url"),
+        "universe_domain": os.getenv("universe_domain")
+    }
+
+cred = credentials.Certificate(DATA)
+firebase_admin.initialize_app(cred, {'databaseURL': 'https://foodai-7ebf0-default-rtdb.firebaseio.com/'})
 
 load_dotenv()
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
@@ -88,7 +106,7 @@ def visual_tool(prompt: str, image_url: str, loc: str) -> str:
         print("Error found : ",e)
         return e
 
-visual_tool.name = "visual"
+visual_tool.name = "visual_tool"
 visual_tool.description = "Get image details on given prompt"
 
 class visual_inputs(BaseModel):
@@ -97,4 +115,61 @@ class visual_inputs(BaseModel):
    loc: str = Field(description="geographical location of the image")
 visual_tool.args_schema = visual_inputs
 
-TOOLS = [web_search_tool, visual_tool]
+with open('DatabaseAI_prompt.txt', 'r') as file:
+    SystemMessage = file.read()
+
+@tool
+def database_tool(Agent_prompt: str) -> str:
+    """Responding on user's database query"""
+
+    message = SystemMessage+"\n"+f"user: {Agent_prompt}."
+    model = ChatGoogleGenerativeAI(model="gemini-1.5-flash")
+    try:
+        command = model.invoke(message)
+        print("LLM Responded Successfully: ", command.content)
+    except Exception as e:
+        print("Error invoking LLM: ", e)
+        return {"Error": "Failed to process the prompt with LLM.", "Details": str(e)}
+    
+    command_content = command.content.strip().lower()  # Remove any leading/trailing whitespace
+    print(command_content)
+    # List of valid categories based on your database structure
+    valid_categories = ["dairy", "fruits", "vegetables", "others"]
+    
+    # Check if the command is not "None" and is a valid path
+    if command_content and command_content != "none":
+        if command_content == "/":
+            # Handle root command to fetch all data
+            try:
+                ref = db.reference("/")  # Reference to the root of the database
+                response = ref.get()  # Get all data from the database
+                print("All Firebase Data Fetched Successfully: ", response)
+                return response
+            except Exception as e:
+                print("Error Fetching All Data from Firebase: ", e)
+                return {"Error": "Failed to fetch all data from Firebase.", "Details": str(e)}
+        elif any(command_content.startswith("/"+category) for category in valid_categories):
+            try:
+                ref = db.reference(command_content)
+                response = ref.get()  # .get() retrieves the data from the database
+                print("Firebase Data Fetched Successfully: ", response)
+                return response
+            except Exception as e:
+                print("Error Fetching Data from Firebase: ", e)
+                return {"Error": "Failed to fetch data from Firebase.", "Details": str(e)}
+        else:
+            return {"Error": "Invalid command structure returned from LLM."}
+    else:
+        # If LLM returns "None" or empty
+        return {"Response": "Not present in the database."}
+    
+
+database_tool.name = "database_tool"
+database_tool.description = "get all the inventory item related information according to the given prompt."
+
+class database_inputs(BaseModel):
+   Agent_prompt: str = Field(description="prompt for retreving inventory related information fom the database.")
+
+database_tool.args_schema = database_inputs
+
+TOOLS = [web_search_tool, visual_tool, database_tool]

@@ -32,7 +32,6 @@ llm = ChatCohere(model="command-r")
 agent = create_cohere_react_agent(llm, tools_list, prompt)
 agent_executor = AgentExecutor(agent=agent, tools=tools_list, verbose=True)
 
-
 # input_data = {           #old
 #     'datetime':'',
 #     'input':'',
